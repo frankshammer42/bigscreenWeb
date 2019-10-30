@@ -12,7 +12,6 @@ app.set('trust proxy', true);
 
 let number_of_client_connections = 0;
 
-
 const web_clients_connection = io.of("/web-client");
 web_clients_connection.on('connection', (socket) => {
     console.log("Get connection from web client");
