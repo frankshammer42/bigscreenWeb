@@ -3,6 +3,8 @@ const path = require('path');
 let app = express();
 let server = require('http').createServer(app);
 let io = require('socket.io')(server);
+//All the generated cutpoints from unity
+let cut_points  = [];
 app.use(express.static(__dirname + '/public'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -30,6 +32,13 @@ web_clients_connection.on('connection', (socket) => {
         let dim_value = data[1];
         unity_client_connection.emit("light_dim", socket_id, dim_value);
     });
+
+    socket.on('client_cut', function (data){
+        console.log("Client Finished Cutting");
+        let cut_index = data;
+        console.log(cut_index);
+        unity_client_connection.emit("cut", cut_index);
+    });
 });
 
 const unity_client_connection = io.of("/unity-client");
@@ -45,6 +54,29 @@ unity_client_connection.on('connection', (socket) => {
     socket.on('start_light_dim', function(){
         console.log('Got light dim message');
         web_clients_connection.emit("light_dim_scene");
+    });
+    socket.on('start_cut', function (data) {
+        console.log('Got cut message');
+        let raw_cut_points = data.data;
+        let num_cuts = raw_cut_points.length/4 | 0;
+        for (let i=0; i<num_cuts; i++){
+            let cut = [];
+            cut.push(raw_cut_points[i*4]);
+            cut.push(raw_cut_points[i*4+1]);
+            cut.push(raw_cut_points[i*4+2]);
+            cut.push(raw_cut_points[i*4+3]);
+            cut_points.push(cut);
+        }
+        let connected_sockets_ids = Object.keys(web_clients_connection.connected);
+        let num_connected_sockets = connected_sockets_ids.length;
+        for (let i=0; i<num_connected_sockets; i++){
+            // let cut = cut_points.pop();
+            let cut = cut_points[i];
+            let socket_id = connected_sockets_ids[i];
+            console.log("Send cut point", cut, "to", socket_id);
+            web_clients_connection.to(socket_id).emit("cut_scene", {"cut":cut, "index":i});
+        }
+        // web_clients_connection.emit("cut_scene");
     })
 });
 
