@@ -9,7 +9,7 @@ class CutLine {
         this.end_y = y2;
         this.k = 0;
         this.b = 0;
-        this.extension = 25;
+        this.extension = 10;
         this.calculateLine();
         //Extend the line so it's easier for users to cut
         if (this.start_x < this.end_x){

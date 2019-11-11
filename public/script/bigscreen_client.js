@@ -5,7 +5,7 @@ let cut_line;
 let scene_index;
 let draw_threshold = 35; // Check to see if users line is near
 let socket;
-
+let cut_scale=80;
 
 function windowResized() {
     resizeCanvas(windowWidth, windowHeight);
@@ -62,7 +62,7 @@ function setup(){
         cut_point[1] = -1*cut_point[1];
         cut_point[3] = -1*cut_point[3];
         for (let i=0; i<cut_point.length; i++){
-            cut_point[i] = 50*cut_point[i];
+            cut_point[i] = cut_scale*cut_point[i];
         }
         cut_point[0] = cut_point[0] + window.innerWidth/2;
         cut_point[1] = cut_point[1] + window.innerHeight/2;
@@ -83,7 +83,7 @@ function draw(){
         text("Cut Scene", 40, 40);
         rectMode(CENTER); // Default rectMode is CORNER
         fill(255); // Set fill to white
-        rect(window.innerWidth/2, window.innerHeight/2, 16.66*50, 11.42*50);
+        rect(window.innerWidth/2, window.innerHeight/2, 7.79*cut_scale, 2.08*cut_scale);
         cut_line.display();
         if (!cut_line.finish_cut){
             if (mouseIsPressed === true){
@@ -115,11 +115,8 @@ function draw(){
             }
         }
         else{
-            text("Finish Cutting", 40, 80);
+            text("Cutting Completed", 40, 80);
         }
-
-
-
 
 
     }
