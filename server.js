@@ -3,6 +3,8 @@ const path = require('path');
 let app = express();
 let server = require('http').createServer(app);
 let io = require('socket.io')(server);
+//For intro Scene
+let at_beginning = false;
 //All the generated cutpoints from unity
 let cut_points  = [];
 app.use(express.static(__dirname + '/public'));
@@ -17,15 +19,29 @@ let number_of_client_connections = 0;
 const web_clients_connection = io.of("/web-client");
 web_clients_connection.on('connection', (socket) => {
     console.log("Get connection from web client");
+    //if there is connection, we update unity client
+    if (at_beginning){
+        unity_client_connection.emit("intro_client_connect");
+    }
     number_of_client_connections += 1;
     socket.on('disconnect', function(){
         number_of_client_connections -= 1;
         console.log('got disconnected');
+        if (at_beginning){
+            unity_client_connection.emit("intro_client_disconnect");
+        }
     });
+
+    socket.on('client_erase_block', function () {
+        console.log("client erase a block");
+        unity_client_connection.emit("intro_block_erased");
+    });
+
     socket.on('client_light_on', function(){
         unity_client_connection.emit("num_of_light_on_connections", number_of_client_connections);
         unity_client_connection.emit("light_on");
     });
+
     //TODO: Maybe we need to have a start dim session if we want to make this continuous?
     socket.on('client_light_dim', function (data) {
         let socket_id = data[0];
@@ -44,6 +60,11 @@ web_clients_connection.on('connection', (socket) => {
 const unity_client_connection = io.of("/unity-client");
 unity_client_connection.on('connection', (socket) => {
     console.log("Get connection from unity client");
+    socket.on('start_intro_interaction', function () {
+        console.log("Start Intro Interaction");
+        web_clients_connection.emit("intro_scene");
+    });
+
     socket.on('start_light_on',  function(){
         console.log('Got light on message');
         web_clients_connection.emit("light_on_scene");
@@ -51,10 +72,12 @@ unity_client_connection.on('connection', (socket) => {
         //It reports back the number of connections it currently has to unity, so it can divide the lights
         socket.emit('num_of_light_on_connections', number_of_client_connections);
     });
+
     socket.on('start_light_dim', function(){
         console.log('Got light dim message');
         web_clients_connection.emit("light_dim_scene");
     });
+
     socket.on('start_cut', function (data) {
         console.log('Got cut message');
         let raw_cut_points = data.data;
@@ -78,6 +101,10 @@ unity_client_connection.on('connection', (socket) => {
         }
         // web_clients_connection.emit("cut_scene");
     })
+
+
+
+
 });
 
 app.get('/', function(req, res) {

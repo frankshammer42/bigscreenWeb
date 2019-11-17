@@ -5,7 +5,21 @@ let cut_line;
 let scene_index;
 let draw_threshold = 35; // Check to see if users line is near
 let socket;
-let cut_scale=80;
+let cut_scale= 50;
+let startSend = false;
+let debug_cut_line;
+
+let xMaxRange = 1100;
+let xMinRange = 10;
+let yMinRange = 300;
+let yMaxRange = 400;
+
+let yMinTrain = 0;
+let yMaxTrain = 0;
+let xMinTrain = 0;
+let xMaxTrain = 0;
+
+
 
 function windowResized() {
     resizeCanvas(windowWidth, windowHeight);
@@ -23,9 +37,10 @@ function send_dim_value(){
 }
 
 function setup(){
+    debug_cut_line = new CutLine(1967/10 + window.innerWidth/2, 23/10+ window.innerHeight/2, 2172/10+ window.innerWidth/2, 88/10+ window.innerHeight/2);
     createCanvas(windowWidth,windowHeight);
-    sceneIndex = 0;
     background(184, 15, 133);
+    scene_index = 0;
     socket = io('/web-client');
     socket.on('light_on_scene', function (data) {
         console.log("Light on scene interactions");
@@ -72,10 +87,22 @@ function setup(){
         // let control_panel = document.getElementById("control_panel");
         // control_panel.innerHTML = "Cut scene";
     });
+
+    socket.on('intro_scene', function () {
+        console.log("intro scene interaction");
+       scene_index = 2;
+    });
+
+
 }
 
 function draw(){
     background(184, 15, 133);
+    console.log(scene_index);
+    if (scene_index === 0){
+        console.log("wtf");
+        debug_cut_line.display();
+    }
     if (scene_index === 1){
         // ellipse(50, 50, 80, 80);
         textSize(32);
@@ -118,11 +145,23 @@ function draw(){
             text("Cutting Completed", 40, 80);
         }
 
-
+    }
+    if (scene_index === 2){
+        if (!startSend){
+            console.log("Send message to server");
+            sendEraseMessage();
+            startSend = true;
+        }
+        textSize(32);
+        fill(255, 255, 255);
+        text("Intro Interactions", 40, 40);
     }
 }
 
-
+function sendEraseMessage(){
+    console.log("Send Erase Message");
+    socket.emit("client_erase_block");
+}
 
 // socket.on('connect', function(data) {
 //     socket.emit('join', 'Hello World from client');

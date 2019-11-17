@@ -39,6 +39,7 @@ class CutLine {
 
     display(){
         strokeWeight(1);
+        console.log(this.draw_start_x);
         line(this.draw_start_x, this.draw_start_y, this.draw_end_x, this.draw_end_y);
     }
 
