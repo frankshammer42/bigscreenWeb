@@ -1,11 +1,12 @@
 // let socket = io.connect('http://localhost:3000');
 let cut_point;
 let cut_index;
+let cut_bound;
 let cut_line;
 let scene_index;
 let draw_threshold = 35; // Check to see if users line is near
 let socket;
-let cut_scale= 50;
+let cut_scale= 1;
 let startSend = false;
 let debug_cut_line;
 
@@ -73,7 +74,9 @@ function setup(){
         scene_index = 1;
         cut_point = data.cut;
         cut_index = data.index;
+        cut_bound = data.cut_bound;
         console.log(cut_point);
+        console.log(cut_bound);
         cut_point[1] = -1*cut_point[1];
         cut_point[3] = -1*cut_point[3];
         for (let i=0; i<cut_point.length; i++){
@@ -98,9 +101,7 @@ function setup(){
 
 function draw(){
     background(184, 15, 133);
-    console.log(scene_index);
     if (scene_index === 0){
-        console.log("wtf");
         debug_cut_line.display();
     }
     if (scene_index === 1){
@@ -110,7 +111,7 @@ function draw(){
         text("Cut Scene", 40, 40);
         rectMode(CENTER); // Default rectMode is CORNER
         fill(255); // Set fill to white
-        rect(window.innerWidth/2, window.innerHeight/2, 7.79*cut_scale, 2.08*cut_scale);
+        rect(window.innerWidth/2, window.innerHeight/2, cut_bound[0]*cut_scale, cut_bound[1]*cut_scale);
         cut_line.display();
         if (!cut_line.finish_cut){
             if (mouseIsPressed === true){

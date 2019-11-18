@@ -4,9 +4,10 @@ let app = express();
 let server = require('http').createServer(app);
 let io = require('socket.io')(server);
 //For intro Scene
-let at_beginning = false;
+let at_beginning = true;
 //All the generated cutpoints from unity
 let cut_points  = [];
+let cut_bound = [];
 app.use(express.static(__dirname + '/public'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -15,6 +16,7 @@ app.set('views', __dirname + '/views');
 app.set('trust proxy', true);
 
 let number_of_client_connections = 0;
+let target_number = 10;
 
 const web_clients_connection = io.of("/web-client");
 web_clients_connection.on('connection', (socket) => {
@@ -24,6 +26,10 @@ web_clients_connection.on('connection', (socket) => {
         unity_client_connection.emit("intro_client_connect");
     }
     number_of_client_connections += 1;
+    if (number_of_client_connections === target_number){
+        console.log("fuck me");
+        at_beginning = false;
+    }
     socket.on('disconnect', function(){
         number_of_client_connections -= 1;
         console.log('got disconnected');
@@ -81,7 +87,9 @@ unity_client_connection.on('connection', (socket) => {
     socket.on('start_cut', function (data) {
         console.log('Got cut message');
         let raw_cut_points = data.data;
+        console.log(data.data);
         let num_cuts = raw_cut_points.length/4 | 0;
+        cut_bound = data.cutBound;
         for (let i=0; i<num_cuts; i++){
             let cut = [];
             cut.push(raw_cut_points[i*4]);
@@ -97,14 +105,10 @@ unity_client_connection.on('connection', (socket) => {
             let cut = cut_points[i];
             let socket_id = connected_sockets_ids[i];
             console.log("Send cut point", cut, "to", socket_id);
-            web_clients_connection.to(socket_id).emit("cut_scene", {"cut":cut, "index":i});
+            web_clients_connection.to(socket_id).emit("cut_scene", {"cut":cut, "index":i, "cut_bound":cut_bound});
         }
         // web_clients_connection.emit("cut_scene");
     })
-
-
-
-
 });
 
 app.get('/', function(req, res) {
@@ -113,6 +117,15 @@ app.get('/', function(req, res) {
 
 app.get('/unity', function (req, res) {
     res.sendFile(path.join(__dirname + '/public/views/unity_test.html'));
+});
+
+app.get('/reset', function (req, res) {
+    at_beginning = true;
+    cut_points  = [];
+    cut_bound = [];
+    number_of_client_connections = 0;
+    console.log("reset all the connection");
+    res.send("Reset");
 });
 
 server.listen(process.env.PORT || 3000, function() {
