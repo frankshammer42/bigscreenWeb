@@ -128,6 +128,6 @@ app.get('/reset', function (req, res) {
     res.send("Reset");
 });
 
-server.listen(process.env.PORT || 3000, function() {
+server.listen(process.env.PORT || 8000, function() {
     console.log('Server is running on', server.address().port);
 });
