@@ -4,10 +4,14 @@ let app = express();
 let server = require('http').createServer(app);
 let io = require('socket.io')(server);
 //For intro Scene
-let at_beginning = true;
+let at_beginning = false;
 //All the generated cutpoints from unity
+let getCut = false; //Make sure we only cut once
 let cut_points  = [];
 let cut_bound = [];
+let block_cut_points = []; //2D array
+let segmentNumber; //how many segments we have
+
 app.use(express.static(__dirname + '/public'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -88,8 +92,33 @@ unity_client_connection.on('connection', (socket) => {
         console.log('Got cut message');
         let raw_cut_points = data.data;
         console.log(data.data);
+        console.log(data.cutBound);
+        console.log(data.xOffSet);
+        console.log(data.yOffSet);
+        console.log(data.segmentNumber);
+        let segmentNumber = data.segmentNumber;
         let num_cuts = raw_cut_points.length/4 | 0;
+        let num_cuts_per_segment = num_cuts/segmentNumber;
         cut_bound = data.cutBound;
+        if (!getCut){
+            // Initialize block cut points data for segment
+            for (let i=0; i<segmentNumber; i++){
+                block_cut_points.push([]);
+            }
+            // Initial block out points data for cut
+            for (let i=0; i<segmentNumber; i++){
+                for (let j=0; j<num_cuts_per_segment; j++){
+                    let cut = [];
+                    cut.push(raw_cut_points[i * num_cuts_per_segment * 4 + j*4]);
+                    cut.push(raw_cut_points[i * num_cuts_per_segment * 4 + j*4 + 1]);
+                    cut.push(raw_cut_points[i * num_cuts_per_segment * 4 + j*4 + 2]);
+                    cut.push(raw_cut_points[i * num_cuts_per_segment * 4 + j*4 + 3]);
+                    block_cut_points[i].push(cut);
+                }
+            }
+            getCut = true;
+        }
+
         for (let i=0; i<num_cuts; i++){
             let cut = [];
             cut.push(raw_cut_points[i*4]);
@@ -102,13 +131,25 @@ unity_client_connection.on('connection', (socket) => {
         let num_connected_sockets = connected_sockets_ids.length;
         for (let i=0; i<num_connected_sockets; i++){
             // let cut = cut_points.pop();
-            let cut = cut_points[i];
-            let socket_id = connected_sockets_ids[i];
-            console.log("Send cut point", cut, "to", socket_id);
-            web_clients_connection.to(socket_id).emit("cut_scene", {"cut":cut, "index":i, "cut_bound":cut_bound});
+            let segmentIndex = (i/num_cuts_per_segment) | 0;
+            let cutIndex = i % num_cuts_per_segment;
+            if (segmentIndex < block_cut_points.length){
+                let cut = block_cut_points[segmentIndex];
+                let client_cut = cut[cutIndex];
+                // let cut = cut_points[i];
+                let socket_id = connected_sockets_ids[i];
+                console.log("Send cut point", client_cut, "to", socket_id);
+                // web_clients_connection.to(socket_id).emit("cut_scene", {"cut":cut, "index":i, "cut_bound":cut_bound});
+                web_clients_connection.to(socket_id).emit("cut_scene", {"cut":client_cut, "index":i, "cut_bound":cut_bound, "segment_index": segmentIndex});
+            }
         }
         // web_clients_connection.emit("cut_scene");
-    })
+    });
+    
+    socket.on('start_cut_fall', function (data) {
+        console.log("cut pieces should fall");
+        web_clients_connection.emit("cut_piece_fall");
+    });
 });
 
 app.get('/', function(req, res) {
@@ -123,6 +164,7 @@ app.get('/reset', function (req, res) {
     at_beginning = true;
     cut_points  = [];
     cut_bound = [];
+    block_cut_points = [];
     number_of_client_connections = 0;
     console.log("reset all the connection");
     res.send("Reset");

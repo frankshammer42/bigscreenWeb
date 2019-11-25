@@ -6,7 +6,7 @@ let cut_line;
 let scene_index;
 let draw_threshold = 35; // Check to see if users line is near
 let socket;
-let cut_scale= 1;
+let cut_scale= 20;
 let startSend = false;
 let debug_cut_line;
 
@@ -19,7 +19,6 @@ let yMinTrain = 0;
 let yMaxTrain = 0;
 let xMinTrain = 0;
 let xMaxTrain = 0;
-
 
 
 function windowResized() {
