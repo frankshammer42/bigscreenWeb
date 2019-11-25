@@ -4,7 +4,7 @@ let app = express();
 let server = require('http').createServer(app);
 let io = require('socket.io')(server);
 //For intro Scene
-let at_beginning = false;
+let at_beginning = true;
 //All the generated cutpoints from unity
 let getCut = false; //Make sure we only cut once
 let cut_points  = [];
@@ -31,7 +31,8 @@ web_clients_connection.on('connection', (socket) => {
     }
     number_of_client_connections += 1;
     if (number_of_client_connections === target_number){
-        console.log("fuck me");
+        console.log("Connection is enough");
+        unity_client_connection.emit("intro_client_disconnect");
         at_beginning = false;
     }
     socket.on('disconnect', function(){
@@ -133,15 +134,15 @@ unity_client_connection.on('connection', (socket) => {
             // let cut = cut_points.pop();
             let segmentIndex = (i/num_cuts_per_segment) | 0;
             let cutIndex = i % num_cuts_per_segment;
-            if (segmentIndex < block_cut_points.length){
-                let cut = block_cut_points[segmentIndex];
-                let client_cut = cut[cutIndex];
-                // let cut = cut_points[i];
-                let socket_id = connected_sockets_ids[i];
-                console.log("Send cut point", client_cut, "to", socket_id);
-                // web_clients_connection.to(socket_id).emit("cut_scene", {"cut":cut, "index":i, "cut_bound":cut_bound});
-                web_clients_connection.to(socket_id).emit("cut_scene", {"cut":client_cut, "index":i, "cut_bound":cut_bound, "segment_index": segmentIndex});
-            }
+            // if (segmentIndex < block_cut_points.length){
+            let cut = block_cut_points[segmentIndex];
+            let client_cut = cut[cutIndex];
+            // let cut = cut_points[i];
+            let socket_id = connected_sockets_ids[i];
+            console.log("Send cut point", client_cut, "to", socket_id);
+            // web_clients_connection.to(socket_id).emit("cut_scene", {"cut":cut, "index":i, "cut_bound":cut_bound});
+            web_clients_connection.to(socket_id).emit("cut_scene", {"cut":client_cut, "index":i, "cut_bound":cut_bound, "segment_index": segmentIndex});
+            // }
         }
         // web_clients_connection.emit("cut_scene");
     });
