@@ -11,6 +11,7 @@ let cut_points  = [];
 let cut_bound = [];
 let block_cut_points = []; //2D array
 let segmentNumber; //how many segments we have
+let num_cuts_per_segment;
 
 app.use(express.static(__dirname + '/public'));
 app.use(express.json());
@@ -22,25 +23,60 @@ app.set('trust proxy', true);
 let number_of_client_connections = 0;
 let target_number = 10;
 
+
+//Progress Tracking
+let progress = 0;
+let cut_progress = 0;
+// progress
+// 0 - wait for connection
+// 1 - start removing blocks
+// 2 - train cut
+// 100 - waiting transition page
+
+
 const web_clients_connection = io.of("/web-client");
 web_clients_connection.on('connection', (socket) => {
     console.log("Get connection from web client");
-    //if there is connection, we update unity client
-    if (at_beginning){
-        unity_client_connection.emit("intro_client_connect");
+
+    switch (progress) {
+        case 1:
+            console.log("add that socket into the intro scene");
+            socket.emit("intro_scene"); //only add to that socket
+            break;
+        case 2:
+            console.log("add that socket into the cut scene");
+            cut_progress += 1;
+            let segmentIndex = (cut_progress/num_cuts_per_segment) | 0;
+            let cutIndex = cut_progress % num_cuts_per_segment;
+            // if (segmentIndex < block_cut_points.length){
+            let cut = block_cut_points[segmentIndex];
+            let client_cut = cut[cutIndex];
+            // let cut = cut_points[i];
+            // let socket_id = connected_sockets_ids[cut_progress];
+            // console.log("Send cut point", client_cut, "to", socket_id);
+            // web_clients_connection.to(socket_id).emit("cut_scene", {"cut":cut, "index":i, "cut_bound":cut_bound});
+            socket.emit("cut_scene", {"cut":client_cut, "index":cut_progress, "cut_bound":cut_bound, "segment_index": segmentIndex});
+            break;
+        default:
+            break;
     }
-    number_of_client_connections += 1;
-    if (number_of_client_connections === target_number){
-        console.log("Connection is enough");
-        unity_client_connection.emit("intro_client_disconnect");
-        at_beginning = false;
-    }
+
+
+    // if (at_beginning){
+    //     unity_client_connection.emit("intro_client_connect");
+    // }
+    // number_of_client_connections += 1;
+    // if (number_of_client_connections === target_number){
+    //     console.log("Connection is enough");
+    //     unity_client_connection.emit("intro_client_disconnect");
+    //     at_beginning = false;
+    // }
     socket.on('disconnect', function(){
-        number_of_client_connections -= 1;
+        // number_of_client_connections -= 1;
         console.log('got disconnected');
-        if (at_beginning){
-            unity_client_connection.emit("intro_client_disconnect");
-        }
+        // if (at_beginning){
+        //     unity_client_connection.emit("intro_client_disconnect");
+        // }
     });
 
     socket.on('client_erase_block', function () {
@@ -73,6 +109,7 @@ unity_client_connection.on('connection', (socket) => {
     console.log("Get connection from unity client");
     socket.on('start_intro_interaction', function () {
         console.log("Start Intro Interaction");
+        progress = 1; //Change to cut interaction
         web_clients_connection.emit("intro_scene");
     });
 
@@ -91,6 +128,7 @@ unity_client_connection.on('connection', (socket) => {
 
     socket.on('start_cut', function (data) {
         console.log('Got cut message');
+        progress = 2;
         let raw_cut_points = data.data;
         console.log(data.data);
         console.log(data.cutBound);
@@ -99,7 +137,7 @@ unity_client_connection.on('connection', (socket) => {
         console.log(data.segmentNumber);
         let segmentNumber = data.segmentNumber;
         let num_cuts = raw_cut_points.length/4 | 0;
-        let num_cuts_per_segment = num_cuts/segmentNumber;
+        num_cuts_per_segment = num_cuts/segmentNumber;
         cut_bound = data.cutBound;
         if (!getCut){
             // Initialize block cut points data for segment
@@ -142,6 +180,7 @@ unity_client_connection.on('connection', (socket) => {
             console.log("Send cut point", client_cut, "to", socket_id);
             // web_clients_connection.to(socket_id).emit("cut_scene", {"cut":cut, "index":i, "cut_bound":cut_bound});
             web_clients_connection.to(socket_id).emit("cut_scene", {"cut":client_cut, "index":i, "cut_bound":cut_bound, "segment_index": segmentIndex});
+            cut_progress += 1;
             // }
         }
         // web_clients_connection.emit("cut_scene");
@@ -161,6 +200,7 @@ app.get('/unity', function (req, res) {
     res.sendFile(path.join(__dirname + '/public/views/unity_test.html'));
 });
 
+//Controlling APIs
 app.get('/reset', function (req, res) {
     at_beginning = true;
     cut_points  = [];
@@ -169,7 +209,33 @@ app.get('/reset', function (req, res) {
     number_of_client_connections = 0;
     console.log("reset all the connection");
     res.send("Reset");
+    progress = 0;
 });
+
+app.get('/start_erase', function (req, res) {
+    unity_client_connection.emit("start_erase_blocks");
+    console.log("start erase");
+    res.send("start erase interaction");
+});
+
+app.get('/batch_erase_blocks', function (req, res) {
+    unity_client_connection.emit("start_batch_erase_blocks");
+    console.log("start batch erase blocks");
+    progress = 100; // Go back to the waiting page
+    res.send("start batch erasing blocks");
+});
+
+app.get('/batch_draw_cut_lines', function (req, res) {
+    unity_client_connection.emit("batch_draw_cut_lines");
+    progress = 100; // Go back to the waiting page
+    res.send("start batch draw cut lines");
+});
+
+app.get('/train_cut', function (req, res) {
+    unity_client_connection.emit("train_cut");
+    res.send("start train cut");
+});
+
 
 server.listen(process.env.PORT || 8000, function() {
     console.log('Server is running on', server.address().port);
