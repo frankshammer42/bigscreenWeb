@@ -237,6 +237,9 @@ app.get('/batch_draw_cut_lines', function (req, res) {
 
 app.get('/train_cut', function (req, res) {
     unity_client_connection.emit("train_cut");
+    web_clients_connection.emit("waiting_page");
+    console.log("train explodes");
+    progress = 100; // Go back to the waiting page
     res.send("start train cut");
 });
 
