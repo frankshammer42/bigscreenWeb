@@ -57,6 +57,9 @@ web_clients_connection.on('connection', (socket) => {
             // web_clients_connection.to(socket_id).emit("cut_scene", {"cut":cut, "index":i, "cut_bound":cut_bound});
             socket.emit("cut_scene", {"cut":client_cut, "index":cut_progress, "cut_bound":cut_bound, "segment_index": segmentIndex});
             break;
+        case 100:
+            web_clients_connection.emit("waiting_page");
+            break;
         default:
             break;
     }
@@ -219,6 +222,7 @@ app.get('/start_erase', function (req, res) {
 });
 
 app.get('/batch_erase_blocks', function (req, res) {
+    web_clients_connection.emit("waiting_page");
     unity_client_connection.emit("start_batch_erase_blocks");
     console.log("start batch erase blocks");
     progress = 100; // Go back to the waiting page
