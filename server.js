@@ -3,6 +3,8 @@ const path = require('path');
 let app = express();
 let server = require('http').createServer(app);
 let io = require('socket.io')(server);
+io.set("transports", ["xhr-polling"]);
+io.set("polling duration", 10);
 //For intro Scene
 let at_beginning = true;
 //All the generated cutpoints from unity
@@ -12,6 +14,8 @@ let cut_bound = [];
 let block_cut_points = []; //2D array
 let segmentNumber; //how many segments we have
 let num_cuts_per_segment;
+
+
 
 app.use(express.static(__dirname + '/public'));
 app.use(express.json());
