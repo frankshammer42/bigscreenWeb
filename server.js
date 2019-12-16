@@ -369,7 +369,6 @@ app.get('/batch_light_on_2', function (req, res) {
     res.send("start batch turn on lights for 2 staircase");
 });
 
-
 app.get('/batch_curtain', function (req, res) {
     unity_client_connection.emit("batch_curtain");
     progress = 100;

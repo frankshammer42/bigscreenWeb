@@ -1,15 +1,54 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>unity_test</title>
-    <script src="/socket.io/socket.io.js"></script>
-    <script type="text/javascript" src="script/unity_client.js"></script>
-</head>
-<body>
-<div>
-    <button id="light_on_trigger" onclick=on_light_on_scene_click()> light_on_scene </button>
-    <button id="light_dim_trigger" onclick=on_light_dim_scene_click()> light_dim_scene </button>
-</div>
-</body>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css?family=Ubuntu&display=swap" rel="stylesheet">
+    <title>Elsland</title>
+    <style>
+      .button {
+        /* color: white; */
+        /* display: inline-block; */
+        /* background: black; */
+        padding: 10px;
+        height: 70px;
+        width: 260px;
+        margin: 30px 10px;
+        font-size: 1.5rem;
+      }
+      #result {
+        font-size: 2rem;
+      }
+    </style>
+  </head>
+  <body>
+    <noscript>
+      <strong>We're sorry but this application doesn't work properly without JavaScript enabled. Please enable it to continue.</strong>
+    </noscript>
+    <div>
+      <button onclick="get('reset')" class="button">Reset</button>
+      <button onclick="get('start_erase')" class="button">Start Erase</button>
+      <button onclick="get('batch_erase_blocks')" class="button">Batch Erase Blocks</button>
+      <button onclick="get('batch_draw_cut_lines')" class="button">Batch Draw Cut Lines</button>
+      <button onclick="get('train_cut')" class="button">Train Cut</button>
+      <button onclick="get('batch_turnoff_screen')" class="button">Batch Turnoff Screen</button>
+      <button onclick="get('batch_light_on_0')" class="button">Batch Light on 0</button>
+      <button onclick="get('batch_light_on_1')" class="button">Batch Light on 1</button>
+      <button onclick="get('batch_light_on_2')" class="button">Batch Light on 2</button>
+      <button onclick="get('batch_curtain')" class="button">Batch Curtain</button>
+    </div>
+    <div id="result" />
+    <script>
+      function get(uri) {
+        const url = '/' + uri;
+        fetch(url, { method: "GET", mode: "no-cors" })
+          .then(res => res.text())
+          .then(body => {
+            document.getElementById("result").innerHTML = body
+          })
+      }
+    </script>
+    <!-- built files will be auto injected -->
+  </body>
 </html>
