@@ -2,9 +2,7 @@ const  express = require('express');
 const path = require('path');
 let app = express();
 let server = require('http').createServer(app);
-let io = require('socket.io')(server);
-io.set("transports", ["xhr-polling"]);
-io.set("polling duration", 10);
+let io = require('socket.io')(server, {transport: ['websocket']});
 //For intro Scene
 let at_beginning = true;
 //All the generated cutpoints from unity
