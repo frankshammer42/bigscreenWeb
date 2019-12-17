@@ -275,14 +275,18 @@ unity_client_connection.on('connection', (socket) => {
         //     console.log(num_connected_sockets);
         //     connections_per_screen = num_connected_sockets/3;
         // }
-        connections_per_screen = num_connected_sockets/3;
+        connections_per_screen = Math.floor(num_connected_sockets/3);
         let remain_connections = num_connected_sockets%3;
-        if (current_screen_index === 2){
-            connections_per_screen += remain_connections;
-        }
+        // if (current_screen_index === 2){
+        //     connections_per_screen += remain_connections;
+        // }
         staircase_screen_index_progress = current_screen_index;
         // staircase_screen_index_progress  = current_screen_index;
         let start_index = current_screen_index*connections_per_screen;
+        if (current_screen_index === 2){
+            connections_per_screen += remain_connections;
+        }
+
         console.log("Current start index is", start_index);
         for (let i=start_index; i<start_index+connections_per_screen; i++){
             if (i < connected_sockets_ids.length){
