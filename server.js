@@ -14,7 +14,6 @@ let segmentNumber; //how many segments we have
 let num_cuts_per_segment;
 
 
-
 app.use(express.static(__dirname + '/public'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -312,6 +311,7 @@ app.get('/reset', function (req, res) {
     cut_bound = [];
     block_cut_points = [];
     number_of_client_connections = 0;
+    getCut = false;
     console.log("reset all the connection");
     res.send("Reset");
     progress = 0;
