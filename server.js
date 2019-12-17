@@ -270,12 +270,16 @@ unity_client_connection.on('connection', (socket) => {
         current_screen_index = 2 - current_screen_index;
         let connected_sockets_ids = Object.keys(web_clients_connection.connected);
         let num_connected_sockets = connected_sockets_ids.length;
-        if (current_screen_index === 0){
-            console.log("------");
-            console.log(num_connected_sockets);
-            connections_per_screen = num_connected_sockets/3;
+        // if (current_screen_index === 0){
+        //     console.log("------");
+        //     console.log(num_connected_sockets);
+        //     connections_per_screen = num_connected_sockets/3;
+        // }
+        connections_per_screen = num_connected_sockets/3;
+        let remain_connections = num_connected_sockets%3;
+        if (current_screen_index === 2){
+            connections_per_screen += remain_connections;
         }
-        // connections_per_screen = total_staircase_lights/3;
         staircase_screen_index_progress = current_screen_index;
         // staircase_screen_index_progress  = current_screen_index;
         let start_index = current_screen_index*connections_per_screen;
