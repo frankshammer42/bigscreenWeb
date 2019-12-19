@@ -44,6 +44,7 @@ let connections_per_screen = 0;
 // 3 - start screen
 // 4 - start staircase
 // 5 - shadow scene
+// 6 - elsland scene
 // 100 - waiting transition page
 
 
@@ -89,6 +90,9 @@ web_clients_connection.on('connection', (socket) => {
             socket.emit("shadow_scene", {"index":shadow_curtain_progress});
             shadow_curtain_progress += 1;
             break;
+        case 6:
+            console.log("add that socket to elsland scene");
+            web_clients_connection.emit("elsland_scene");
         case 100:
             web_clients_connection.emit("waiting_page");
             break;
@@ -306,6 +310,11 @@ unity_client_connection.on('connection', (socket) => {
                 web_clients_connection.to(socket_id).emit("staircase_scene_wait");
             }
         }
+    });
+
+    socket.on('start_elsland', function (data) {
+        progress = 6;
+        web_clients_connection.emit("elsland_scene");
     })
 });
 
@@ -352,7 +361,7 @@ app.get('/batch_draw_cut_lines', function (req, res) {
 
 app.get('/train_cut', function (req, res) {
     unity_client_connection.emit("train_cut");
-    setTimeout(sendWaitingPage, 2500);
+    // setTimeout(sendWaitingPage, 2500);
     // web_clients_connection.emit("waiting_page");
     console.log("train explodes");
     progress = 100; // Go back to the waiting page
@@ -361,7 +370,7 @@ app.get('/train_cut', function (req, res) {
 
 app.get('/batch_turnoff_screen', function (req, res) {
     unity_client_connection.emit("batch_turnoff_screen");
-    // web_clients_connection.emit("waiting_page");
+    web_clients_connection.emit("waiting_page");
     progress = 100; // Go back to the waiting page
     res.send("start erase screens");
 });
