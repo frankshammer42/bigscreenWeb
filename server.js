@@ -93,6 +93,7 @@ web_clients_connection.on('connection', (socket) => {
         case 6:
             console.log("add that socket to elsland scene");
             web_clients_connection.emit("elsland_scene");
+            break;
         case 100:
             web_clients_connection.emit("waiting_page");
             break;
