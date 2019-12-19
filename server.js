@@ -300,8 +300,13 @@ unity_client_connection.on('connection', (socket) => {
             }
         }
         staircase_lights_progress = 0;
+        for (let i=start_index+connections_per_screen; i<num_connected_sockets; i++){
+            if (i < connected_sockets_ids.length){
+                let socket_id = connected_sockets_ids[i];
+                web_clients_connection.to(socket_id).emit("staircase_scene_wait");
+            }
+        }
     })
-
 });
 
 app.get('/', function(req, res) {
