@@ -239,6 +239,11 @@ unity_client_connection.on('connection', (socket) => {
                 web_clients_connection.to(socket_id).emit("cut_scene", {"cut":client_cut, "index":i, "cut_bound":cut_bound, "segment_index": segmentIndex});
                 cut_progress += 1;
             }
+            else{
+                let socket_id = connected_sockets_ids[i];
+                console.log("Send fake cut point to", socket_id);
+                web_clients_connection.to(socket_id).emit("cut_scene_fake");
+            }
         }
         // web_clients_connection.emit("cut_scene");
     });
